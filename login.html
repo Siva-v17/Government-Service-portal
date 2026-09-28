@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in · Stackly Government Services Portal</title>
+<meta name="description" content="Sign in or create your verified citizen account for the Stackly Government Services Portal.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+
+    :root{
+      --navy:#112A4F;
+      --navy-deep:#0A1930;
+      --navy-soft:#1D3E6C;
+      --gold:#C49B36;
+      --gold-light:#E4C878;
+      --teal:#1F6F78;
+      --paper:#F6F4EC;
+      --paper-dim:#EDE9DC;
+      --paper-line:#D9D2BD;
+      --ink:#1B1A17;
+      --ink-soft:#5B5648;
+      --success:#2E7D4F;
+      --danger:#AE3B26;
+      --radius-s:2px;
+      --radius-m:4px;
+      --ff-serif:'Source Serif 4', Georgia, serif;
+      --ff-sans:'IBM Plex Sans', -apple-system, Segoe UI, sans-serif;
+      --ff-mono:'IBM Plex Mono', monospace;
+      --shadow-1: 0 1px 0 rgba(17,42,79,0.06);
+      --shadow-2: 0 18px 44px -20px rgba(10,25,48,0.35);
+    }
+    *,*::before,*::after{box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      margin:0; background:var(--paper); color:var(--ink);
+      font-family:var(--ff-sans); font-size:16px; line-height:1.6;
+      -webkit-font-smoothing:antialiased;
+    }
+    img{max-width:100%; display:block;}
+    a{color:inherit; text-decoration:none;}
+    h1,h2,h3,h4{font-family:var(--ff-serif); color:var(--navy); margin:0; font-weight:600; letter-spacing:-0.01em;}
+    p{margin:0;}
+    ::selection{background:var(--gold-light); color:var(--navy-deep);}
+    :focus-visible{outline:3px solid var(--teal); outline-offset:2px;}
+    @media (prefers-reduced-motion: reduce){
+      *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important;}
+    }
+
+    .wrap{max-width:1280px; margin:0 auto; padding:0 40px;}
+    .eyebrow-line{display:flex; align-items:center; gap:12px; color:var(--teal); font-size:13px; font-weight:600; margin-bottom:18px;}
+    .eyebrow-line .rule{width:34px; height:1px; background:var(--teal);}
+
+    /* ---- preloader ---- */
+    #preloader{position:fixed; inset:0; background:var(--navy-deep); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px;}
+    #preloader .seal{width:64px; height:64px; border:2px solid var(--gold); border-radius:50%; position:relative; animation:spin 2.2s linear infinite;}
+    #preloader .seal::before{content:''; position:absolute; inset:26px; background:var(--gold); border-radius:50%;}
+    #preloader .ptext{font-family:var(--ff-mono); color:var(--gold-light); font-size:12px; letter-spacing:0.14em;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ---- header / nav ---- */
+    header.site{position:fixed; top:0; left:0; right:0; z-index:500; background:rgba(246,244,236,0.86); backdrop-filter:blur(10px); border-bottom:1px solid var(--paper-line); transition:background .3s ease;}
+    .nav-row{display:flex; align-items:center; justify-content:space-between; height:84px;}
+    .logo img{height:70px; width:auto;}
+    nav.primary{display:flex; align-items:center; gap:36px;}
+    nav.primary a{font-size:14.5px; font-weight:500; color:var(--navy); position:relative; padding:6px 0;}
+    nav.primary a::after{content:''; position:absolute; left:0; bottom:0; width:0; height:2px; background:var(--gold); transition:width .3s ease;}
+    nav.primary a:hover::after, nav.primary a.active::after{width:100%;}
+    nav.primary a.active{color:var(--gold);}
+    .nav-actions{display:flex; align-items:center; gap:14px;}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--ff-sans); font-weight:600; font-size:14px; padding:12px 24px; border-radius:var(--radius-s); border:1px solid transparent; cursor:pointer; transition:transform .25s ease, box-shadow .25s ease, background .25s ease, color .25s ease;}
+    .btn-primary{background:var(--navy); color:#fff;}
+    .btn-primary:hover{background:var(--navy-soft); box-shadow:var(--shadow-2); transform:translateY(-2px);}
+    .btn-gold{background:var(--gold); color:var(--navy-deep);}
+    .btn-gold:hover{background:var(--gold-light); transform:translateY(-2px); box-shadow:0 14px 30px -14px rgba(196,155,54,0.6);}
+    .btn-outline{background:transparent; border:1px solid var(--navy); color:var(--navy);}
+    .btn-outline:hover{background:var(--navy); color:#fff;}
+    .btn-outline-light{background:transparent; border:1px solid rgba(255,255,255,0.4); color:#fff;}
+    .btn-outline-light:hover{background:rgba(255,255,255,0.12); border-color:#fff;}
+    .btn-sm{padding:9px 18px; font-size:13px;}
+    .btn[disabled]{opacity:0.55; cursor:not-allowed; transform:none !important;}
+    .menu-toggle{display:none; flex-direction:column; gap:5px; background:none; border:0; cursor:pointer; padding:6px;}
+    .menu-toggle span{width:24px; height:2px; background:var(--navy);}
+
+    /* ---- footer ---- */
+    footer.site{background:var(--navy-deep); color:#CBD3E1; padding:80px 0 0;}
+    footer.site .foot-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr 1.1fr; gap:40px; padding-bottom:56px; border-bottom:1px solid rgba(255,255,255,0.1);}
+    footer.site h5{font-family:var(--ff-sans); color:#fff; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:18px; font-weight:600;}
+    footer.site ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px;}
+    footer.site a{color:#AEB8CC; font-size:14px; transition:color .2s ease;}
+    footer.site a:hover{color:var(--gold-light);}
+    footer.site .foot-brand img{height:38px; margin-bottom:16px; filter:brightness(0) invert(1);}
+    footer.site .foot-brand p{color:#93A0B8; font-size:14px; max-width:280px;}
+    .foot-bottom{display:flex; justify-content:space-between; align-items:center; padding:26px 0; font-size:13px; color:#7C8AA3; flex-wrap:wrap; gap:12px;}
+    .foot-bottom .socials{display:flex; gap:14px;}
+    .foot-bottom .socials a{width:34px; height:34px; border:1px solid rgba(255,255,255,0.16); border-radius:50%; display:flex; align-items:center; justify-content:center;}
+    .newsletter-row{display:flex; gap:0; margin-top:8px; border:1px solid rgba(255,255,255,0.2); border-radius:var(--radius-s); overflow:hidden; max-width:280px;}
+    .newsletter-row input{flex:1; background:transparent; border:0; padding:11px 12px; color:#fff; font-family:var(--ff-sans); font-size:13px;}
+    .newsletter-row button{background:var(--gold); color:var(--navy-deep); border:0; padding:0 16px; font-weight:700; cursor:pointer;}
+
+    /* ---- generic section helpers ---- */
+    section{padding:120px 0;}
+    .section-head{max-width:640px; margin-bottom:64px;}
+    .section-head h2{font-size:clamp(30px,3.6vw,44px); line-height:1.15;}
+    .section-head p.lead{margin-top:16px; color:var(--ink-soft); font-size:17px; line-height:1.7;}
+    .split{display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center;}
+    .reveal{opacity:0; transform:translateY(28px);}
+
+    .card{background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius-m); padding:32px; transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease;}
+    .card:hover{transform:translateY(-4px); box-shadow:var(--shadow-2); border-color:transparent;}
+
+    .tag{display:inline-flex; align-items:center; font-family:var(--ff-mono); font-size:11px; letter-spacing:0.05em; padding:4px 10px; border:1px solid var(--paper-line); border-radius:20px; color:var(--ink-soft);}
+
+    /* watermark seal */
+    .seal-mark{position:absolute; width:520px; height:520px; border-radius:50%; border:1px solid rgba(255,255,255,0.08); pointer-events:none;}
+    .seal-mark::before{content:''; position:absolute; inset:40px; border-radius:50%; border:1px dashed rgba(255,255,255,0.08);}
+
+    /* stat counters */
+    .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--paper-line); border:1px solid var(--paper-line); border-radius:var(--radius-m); overflow:hidden;}
+    .stat-cell{background:var(--paper); padding:32px 28px;}
+    .stat-cell .num{font-family:var(--ff-serif); font-size:40px; color:var(--navy); font-weight:600;}
+    .stat-cell .lab{font-size:13px; color:var(--ink-soft); margin-top:6px;}
+
+    /* forms */
+    .field{display:flex; flex-direction:column; gap:7px; margin-bottom:20px;}
+    .field label{font-size:13px; font-weight:600; color:var(--navy);}
+    .field .hint{font-size:12px; color:var(--ink-soft);}
+    .field input, .field select, .field textarea{
+      font-family:var(--ff-sans); font-size:14.5px; padding:13px 14px; border:1px solid var(--paper-line);
+      border-radius:var(--radius-s); background:#fff; color:var(--ink); transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--teal); box-shadow:0 0 0 3px rgba(31,111,120,0.14); outline:none;}
+    .field .err{font-size:12px; color:var(--danger); display:none;}
+    .field.invalid input, .field.invalid select{border-color:var(--danger);}
+    .field.invalid .err{display:block;}
+    .checkline{display:flex; align-items:flex-start; gap:10px; font-size:13.5px; color:var(--ink-soft);}
+
+    /* password field with eye toggle */
+    .pass-wrap{position:relative; display:flex;}
+    .pass-wrap input{width:100%; padding-right:44px;}
+    .pass-toggle{position:absolute; right:0; top:0; bottom:0; width:40px; display:flex; align-items:center; justify-content:center; background:none; border:0; cursor:pointer; color:var(--ink-soft); padding:0;}
+    .pass-toggle:hover{color:var(--navy);}
+    .pass-toggle svg{width:19px; height:19px; display:block;}
+    .pass-toggle .eye-off{display:none;}
+    .pass-toggle.showing .eye{display:none;}
+    .pass-toggle.showing .eye-off{display:block;}
+
+    ::-webkit-scrollbar{width:10px;}
+    ::-webkit-scrollbar-track{background:var(--paper-dim);}
+    ::-webkit-scrollbar-thumb{background:var(--paper-line); border-radius:6px;}
+
+    /* -------- responsive -------- */
+    @media (max-width:1100px){
+      .wrap{padding:0 28px;}
+      footer.site .foot-grid{grid-template-columns:1fr 1fr; row-gap:36px;}
+      .stat-row{grid-template-columns:repeat(2,1fr);}
+    }
+    @media (max-width:860px){
+      nav.primary{position:fixed; top:84px; left:0; right:0; bottom:0; background:var(--paper); flex-direction:column; align-items:flex-start; padding:32px 28px; gap:22px; transform:translateX(100%); transition:transform .35s ease; overflow-y:auto;}
+      nav.primary.open{transform:translateX(0);}
+      nav.primary a{font-size:18px;}
+      .menu-toggle{display:flex;}
+      .nav-actions .btn-outline{display:none;}
+      section{padding:76px 0;}
+      .split{grid-template-columns:1fr; gap:40px;}
+      footer.site .foot-grid{grid-template-columns:1fr; gap:30px;}
+    }
+    @media (max-width:520px){
+      .wrap{padding:0 20px;}
+      .stat-row{grid-template-columns:1fr 1fr;}
+      .nav-row{height:72px;}
+    }
+
+
+    body{background:var(--navy-deep);}
+    header.site{background:rgba(10,25,48,0.86); border-bottom:1px solid rgba(255,255,255,0.08);}
+    nav.primary a{color:#fff;}
+    nav.primary a::after{background:var(--gold);}
+    .logo img{filter:brightness(0) invert(1);}
+    @media (max-width:860px){ nav.primary{background:var(--navy-deep);} }
+
+    .auth-shell{min-height:100vh; display:grid; grid-template-columns:1fr 1fr;}
+    .auth-visual{position:relative; overflow:hidden;}
+    .auth-visual img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+    .auth-visual::after{content:''; position:absolute; inset:0; background:linear-gradient(160deg, rgba(17,42,79,0.92) 0%, rgba(10,25,48,0.88) 100%);}
+    .auth-visual .content{position:relative; z-index:2; padding:64px; display:flex; flex-direction:column; justify-content:space-between; height:100%; color:#fff;}
+    .auth-visual .quote{font-family:var(--ff-serif); font-size:26px; line-height:1.5; max-width:420px;}
+    .auth-visual .quote span{display:block; margin-top:18px; font-family:var(--ff-sans); font-size:13px; color:#93A0B8;}
+    .auth-visual .stats{display:flex; gap:40px;}
+    .auth-visual .stats div strong{display:block; font-family:var(--ff-serif); font-size:28px;}
+    .auth-visual .stats div span{font-size:12px; color:#93A0B8;}
+
+    .auth-form-side{display:flex; align-items:center; justify-content:center; padding:120px 60px 60px;}
+    .auth-box{width:100%; max-width:420px; background:#fff; border-radius:14px; padding:40px 36px 36px; box-shadow:var(--shadow-2); border:1px solid rgba(17,42,79,0.06);}
+    .auth-box-logo{display:flex; align-items:center; gap:10px; margin-bottom:28px;}
+    .auth-box-logo img{height:70px; width:auto;}
+    .auth-visual-logo{display:flex; align-items:center; gap:10px; margin-bottom:26px;}
+    .auth-visual-logo img{height:36px; width:auto; filter:brightness(0) invert(1);}
+    .auth-tabs{display:flex; gap:4px; background:var(--paper-dim); border-radius:8px; padding:4px; margin-bottom:36px;}
+    .auth-tab{flex:1; text-align:center; padding:11px; border-radius:6px; font-weight:600; font-size:13.5px; cursor:pointer; color:var(--ink-soft); transition:all .25s ease;}
+    .auth-tab.active{background:#fff; color:var(--navy); box-shadow:0 2px 8px rgba(17,42,79,0.1);}
+    .auth-pane{display:none;}
+    .auth-pane.active{display:block;}
+    .auth-box h3{font-size:24px; margin-bottom:8px;}
+    .auth-box .sub{color:var(--ink-soft); font-size:14px; margin-bottom:28px;}
+    .otp-row{display:flex; gap:8px;}
+    .otp-row input{width:44px; text-align:center; padding:12px 0;}
+    .role-toggle{display:flex; gap:10px; margin-bottom:22px;}
+    .role-opt{flex:1; border:1px solid var(--paper-line); border-radius:6px; padding:12px; text-align:center; font-size:13px; font-weight:600; cursor:pointer; color:var(--ink-soft);}
+    .role-opt.active{border-color:var(--navy); background:var(--navy); color:#fff;}
+    .auth-divider{display:flex; align-items:center; gap:12px; margin:24px 0; color:var(--ink-soft); font-size:12px;}
+    .auth-divider::before, .auth-divider::after{content:''; flex:1; height:1px; background:var(--paper-line);}
+    .demo-note{background:var(--paper-dim); border-radius:6px; padding:12px 14px; font-size:12.5px; color:var(--ink-soft); margin-top:20px; line-height:1.6;}
+    .demo-note strong{color:var(--navy);}
+    .between-row{display:flex; justify-content:space-between; align-items:center; margin:-8px 0 20px;}
+    .link-sm{font-size:13px; color:var(--teal); font-weight:600; cursor:pointer;}
+
+    @media (max-width:900px){
+      .auth-shell{grid-template-columns:1fr;}
+      .auth-visual{display:none;}
+      .auth-form-side{padding:120px 24px 60px;}
+    }
+
+    /* ---- toast ---- */
+    .toast-stack{position:fixed; top:24px; right:24px; z-index:9998; display:flex; flex-direction:column; gap:10px; align-items:flex-end;}
+    .toast{display:flex; align-items:flex-start; gap:12px; background:#fff; color:var(--ink); border-left:4px solid var(--teal); border-radius:8px; box-shadow:var(--shadow-2); padding:14px 18px; font-size:13.5px; font-weight:500; max-width:340px; opacity:0; transform:translateX(30px); pointer-events:none;}
+    .toast.success{border-left-color:var(--success);}
+    .toast.info{border-left-color:var(--teal);}
+    .toast .toast-ic{flex-shrink:0; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; margin-top:1px;}
+    .toast.success .toast-ic{background:var(--success);}
+    .toast.info .toast-ic{background:var(--teal);}
+    .toast .toast-text strong{display:block; color:var(--navy); font-size:13.5px; margin-bottom:2px;}
+    .toast .toast-text span{color:var(--ink-soft); font-size:12.5px;}
+    @media (max-width:520px){ .toast-stack{left:16px; right:16px; top:16px;} .toast{max-width:none;} }
+
+</style>
+</head>
+<body>
+<div id="preloader"><div class="seal"></div><div class="ptext">LOADING SECURE PORTAL&hellip;</div></div>
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+
+  <div class="auth-shell">
+    <div class="auth-visual">
+      <img src="https://images.unsplash.com/photo-1568992687947-868a62a9f521?auto=format&fit=crop&w=1400&q=80" alt="Government administrative building" loading="lazy">
+      <div class="content">
+        <div>
+          <div class="auth-visual-logo"><img src="./stackly.png" alt="Stackly Government Services Portal"></div>
+          <div class="eyebrow-line" style="color:var(--gold-light);"><span class="rule" style="background:var(--gold-light);"></span> Secure citizen sign-in</div>
+        </div>
+        <div class="quote">&ldquo;One verified identity now moves my family's certificates, taxes and pension applications &mdash; nothing gets lost between departments anymore.&rdquo;<span>Lakshmi Venkatesh &middot; Citizen since 2022</span></div>
+        <div class="stats">
+          <div><strong>2.4Cr+</strong><span>Verified accounts</span></div>
+          <div><strong>256-bit</strong><span>Encryption standard</span></div>
+          <div><strong>99.9%</strong><span>Portal uptime</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-form-side">
+      <div class="auth-box">
+        <div class="auth-box-logo"><img src="./stackly.png" alt="Stackly Government Services Portal"></div>
+        <div class="auth-tabs">
+          <div class="auth-tab active" data-tab="login">Log in</div>
+          <div class="auth-tab" data-tab="signup">Create account</div>
+        </div>
+
+        <div class="auth-pane active" id="pane-login">
+          <h3>Welcome back</h3>
+          <p class="sub">Sign in with your registered mobile number and password.</p>
+
+          <div class="role-toggle">
+            <div class="role-opt active" data-role="citizen">Citizen</div>
+            <div class="role-opt" data-role="staff">Department staff</div>
+          </div>
+
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="loginEmail">Email or mobile number</label>
+              <input id="loginEmail" type="text" placeholder="you@email.com" required>
+              <span class="err">Enter a valid email or 10-digit mobile number.</span>
+            </div>
+            <div class="field">
+              <label for="loginPass">Password</label>
+              <div class="pass-wrap">
+                <input id="loginPass" type="password" placeholder="Enter your password" required>
+                <button type="button" class="pass-toggle" data-target="loginPass" aria-label="Show password">
+                  <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>
+                  <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.9 10.9 0 0 1 12 5c7 0 10.5 7 10.5 7a13.8 13.8 0 0 1-3.14 4.2M6.6 6.6C3.4 8.6 1.5 12 1.5 12S5 19 12 19a10.6 10.6 0 0 0 4.06-.8"/><path d="M9.5 9.7a3.2 3.2 0 0 0 4.6 4.5"/></svg>
+                </button>
+              </div>
+              <span class="err">Password must be at least 6 characters.</span>
+            </div>
+            <div class="between-row">
+              <label class="checkline"><input type="checkbox" checked style="margin-top:2px;"> Keep me signed in</label>
+              <span class="link-sm" id="forgotPasswordLink">Forgot password?</span>
+            </div>
+            <button type="submit" class="btn btn-primary magnetic" style="width:100%;">Sign in</button>
+          </form>
+
+          <div class="auth-divider">or continue with</div>
+          <button type="button" class="btn btn-outline" id="otpLoginBtn" style="width:100%;">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4.5 4.5 0 0 0-4.5 4.5v2a4.5 4.5 0 0 0 9 0v-2A4.5 4.5 0 0 0 12 2Z"/><path d="M6 10.5v1.2a6 6 0 0 0 12 0v-1.2"/><path d="M12 17.5V22"/><path d="M4.2 8.2A9 9 0 0 1 12 3"/><path d="M19.8 8.2A9 9 0 0 0 12 3"/></svg>
+            Sign in with Aadhaar OTP
+          </button>
+
+          <!-- <button type="button" class="btn btn-outline" id="otpLoginBtn" style="width:100%;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back to site</a>
+
+          </button> -->
+
+          
+          <a href="index.html" class="btn btn-outline" style="width:100%; margin-top:12px;">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+            Back to site
+          </a>
+        </div>
+
+        <div class="auth-pane" id="pane-signup">
+          <h3>Create your citizen account</h3>
+          <p class="sub">One account gives you access to every department on the portal.</p>
+          <form id="signupForm" novalidate>
+            <div class="field">
+              <label for="suName">Full name</label>
+              <input id="suName" type="text" placeholder="As per Aadhaar" required>
+              <span class="err">Please enter your full name.</span>
+            </div>
+            <div class="field">
+              <label for="suEmail">Email address</label>
+              <input id="suEmail" type="email" placeholder="you@email.com" required>
+              <span class="err">Enter a valid email address.</span>
+            </div>
+            <div class="field">
+              <label for="suMobile">Mobile number</label>
+              <input id="suMobile" type="tel" placeholder="10-digit mobile number" required>
+              <span class="err">Enter a valid 10-digit mobile number.</span>
+            </div>
+            <div class="field">
+              <label for="suPass">Create password</label>
+              <div class="pass-wrap">
+                <input id="suPass" type="password" placeholder="At least 8 characters" required>
+                <button type="button" class="pass-toggle" data-target="suPass" aria-label="Show password">
+                  <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>
+                  <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.9 10.9 0 0 1 12 5c7 0 10.5 7 10.5 7a13.8 13.8 0 0 1-3.14 4.2M6.6 6.6C3.4 8.6 1.5 12 1.5 12S5 19 12 19a10.6 10.6 0 0 0 4.06-.8"/><path d="M9.5 9.7a3.2 3.2 0 0 0 4.6 4.5"/></svg>
+                </button>
+              </div>
+              <span class="err">Password must be at least 8 characters.</span>
+            </div>
+            <div class="field">
+              <label for="suConfirmPass">Confirm password</label>
+              <div class="pass-wrap">
+                <input id="suConfirmPass" type="password" placeholder="Re-enter your password" required>
+                <button type="button" class="pass-toggle" data-target="suConfirmPass" aria-label="Show password">
+                  <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>
+                  <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.9 10.9 0 0 1 12 5c7 0 10.5 7 10.5 7a13.8 13.8 0 0 1-3.14 4.2M6.6 6.6C3.4 8.6 1.5 12 1.5 12S5 19 12 19a10.6 10.6 0 0 0 4.06-.8"/><path d="M9.5 9.7a3.2 3.2 0 0 0 4.6 4.5"/></svg>
+                </button>
+              </div>
+              <span class="err">Passwords do not match.</span>
+            </div>
+            <label class="checkline" style="margin-bottom:20px;"><input type="checkbox" required style="margin-top:2px;"> I agree to the portal's Terms of Service and Privacy Policy</label>
+            <button type="submit" class="btn btn-gold magnetic" style="width:100%;">Create account</button>
+          </form>
+
+          <div class="auth-divider">or continue with</div>
+          <button type="button" class="btn btn-outline" id="otpSignupBtn" style="width:100%;">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4.5 4.5 0 0 0-4.5 4.5v2a4.5 4.5 0 0 0 9 0v-2A4.5 4.5 0 0 0 12 2Z"/><path d="M6 10.5v1.2a6 6 0 0 0 12 0v-1.2"/><path d="M12 17.5V22"/><path d="M4.2 8.2A9 9 0 0 1 12 3"/><path d="M19.8 8.2A9 9 0 0 0 12 3"/></svg>
+            Create account with Aadhaar OTP
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // tabs
+    function activateAuthTab(tabName){
+      document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab === tabName));
+      document.querySelectorAll('.auth-pane').forEach(p=>p.classList.remove('active'));
+      document.getElementById('pane-'+tabName).classList.add('active');
+    }
+    document.querySelectorAll('.auth-tab').forEach(tab=>{
+      tab.addEventListener('click', ()=> activateAuthTab(tab.dataset.tab));
+    });
+
+    // role toggle
+    let selectedRole = 'citizen';
+    document.querySelectorAll('.role-opt').forEach(opt=>{
+      opt.addEventListener('click', ()=>{
+        document.querySelectorAll('.role-opt').forEach(o=>o.classList.remove('active'));
+        opt.classList.add('active');
+        selectedRole = opt.dataset.role;
+      });
+    });
+
+    function setField(id, ok){
+      document.getElementById(id).closest('.field').classList.toggle('invalid', !ok);
+    }
+
+    // password show/hide toggles
+    document.querySelectorAll('.pass-toggle').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const input = document.getElementById(btn.dataset.target);
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        btn.classList.toggle('showing', !showing);
+        btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      });
+    });
+
+    /* ---- toast notifications ---- */
+    function showToast(title, message, type){
+      type = type || 'info';
+      const stack = document.getElementById('toastStack');
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      el.innerHTML = '<span class="toast-ic">' + (type === 'success' ? '\u2713' : 'i') + '</span>'
+        + '<span class="toast-text"><strong>' + title + '</strong><span>' + message + '</span></span>';
+      stack.appendChild(el);
+      gsap.fromTo(el, {opacity:0, x:30}, {opacity:1, x:0, duration:0.4, ease:'power3.out'});
+      setTimeout(()=>{
+        gsap.to(el, {opacity:0, x:30, duration:0.35, ease:'power2.in', onComplete:()=> el.remove()});
+      }, 3800);
+    }
+
+    /*
+      SESSION MODEL — single source of truth for the logged-in user.
+      We always OVERWRITE the "stackly_user" key with one fresh object (never
+      append/push), so the dashboard can never read a stale or duplicated
+      email. Signing out clears the key entirely.
+    */
+    function signIn(email, name, role){
+      const user = {
+        name: name || email.split('@')[0].replace(/[^a-zA-Z ]/g,' ').trim() || 'Citizen',
+        email: email,
+        role: role,
+        signedInAt: new Date().toISOString()
+      };
+      localStorage.setItem('stackly_user', JSON.stringify(user));
+      window.location.href = (role === 'staff') ? 'admin-dashboard.html' : 'user-dashboard.html';
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    loginForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const emailEl = document.getElementById('loginEmail');
+      const passEl = document.getElementById('loginPass');
+      const emailVal = emailEl.value.trim();
+      const passVal = passEl.value;
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal) || /^[0-9]{10}$/.test(emailVal);
+      const passOk = passVal.length >= 6;
+      setField('loginEmail', emailOk);
+      setField('loginPass', passOk);
+      if(!emailOk || !passOk) return;
+      const emailForStorage = emailVal.includes('@') ? emailVal : emailVal + '@stackly.gov.in';
+      showToast('Login successful', 'Redirecting you to your dashboard\u2026', 'success');
+      setTimeout(()=> signIn(emailForStorage, null, selectedRole), 1100);
+    });
+
+    const otpBtn = document.getElementById('otpLoginBtn');
+otpBtn.addEventListener('click', ()=>{
+  window.location.href = 'error.html';
+});
+
+    const otpSignupBtn = document.getElementById('otpSignupBtn');
+    otpSignupBtn.addEventListener('click', ()=>{
+      showToast('Account created', 'Verified with Aadhaar OTP \u2014 please log in to continue.', 'success');
+      setTimeout(()=>{
+        activateAuthTab('login');
+        document.getElementById('loginEmail').value = 'citizen.otp@stackly.gov.in';
+      }, 1100);
+    });
+
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    forgotLink.addEventListener('click', ()=>{
+      const emailVal = document.getElementById('loginEmail').value.trim();
+      const target = emailVal || 'your registered email or mobile number';
+      showToast('Reset link sent', 'If an account matches ' + target + ', a password reset link is on its way.', 'info');
+    });
+
+    const signupForm = document.getElementById('signupForm');
+    signupForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const name = document.getElementById('suName');
+      const email = document.getElementById('suEmail');
+      const mobile = document.getElementById('suMobile');
+      const pass = document.getElementById('suPass');
+      const confirmPass = document.getElementById('suConfirmPass');
+      const nameOk = name.value.trim().length > 1;
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+      const mobileOk = /^[0-9]{10}$/.test(mobile.value.trim());
+      const passOk = pass.value.length >= 8;
+      const confirmOk = passOk && confirmPass.value === pass.value;
+      setField('suName', nameOk); setField('suEmail', emailOk); setField('suMobile', mobileOk); setField('suPass', passOk); setField('suConfirmPass', confirmOk);
+      if(!nameOk || !emailOk || !mobileOk || !passOk || !confirmOk) return;
+      const signupEmail = email.value.trim();
+      showToast('Account created', 'Your account is ready \u2014 please log in to continue.', 'success');
+      setTimeout(()=>{
+        activateAuthTab('login');
+        document.getElementById('loginEmail').value = signupEmail;
+        signupForm.reset();
+      }, 1100);
+    });
+  </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script>
+
+    // preloader
+    window.addEventListener('load', () => {
+      const pl = document.getElementById('preloader');
+      if(pl){
+        gsap.to(pl, {opacity:0, duration:0.6, delay:0.3, ease:'power2.out', onComplete:()=>{pl.style.display='none'; runHero();}});
+      } else { runHero(); }
+    });
+
+    // mobile menu
+    const menuToggle = document.getElementById('menuToggle');
+    const primaryNav = document.getElementById('primaryNav');
+    if(menuToggle){
+      menuToggle.addEventListener('click', ()=> primaryNav.classList.toggle('open'));
+      primaryNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>primaryNav.classList.remove('open')));
+    }
+
+    // header shadow on scroll
+    const header = document.querySelector('header.site');
+    window.addEventListener('scroll', ()=>{
+      if(window.scrollY>16){ header.style.boxShadow='0 8px 28px -20px rgba(10,25,48,0.4)'; }
+      else { header.style.boxShadow='none'; }
+    });
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    // simple text-split for headline animation (avoids relying on club plugins)
+    function splitChars(el){
+      const text = el.textContent;
+      el.textContent = '';
+      const frag = document.createDocumentFragment();
+      [...text].forEach(ch=>{
+        const span = document.createElement('span');
+        span.textContent = ch === ' ' ? '\u00A0' : ch;
+        span.style.display='inline-block';
+        span.style.willChange='transform,opacity';
+        frag.appendChild(span);
+      });
+      el.appendChild(frag);
+      return el.querySelectorAll('span');
+    }
+
+    function runHero(){
+      document.querySelectorAll('[data-split]').forEach(el=>{
+        const chars = splitChars(el);
+        gsap.fromTo(chars, {yPercent:120, opacity:0, rotateZ:4}, {
+          yPercent:0, opacity:1, rotateZ:0, duration:0.9, ease:'power4.out',
+          stagger:0.018, delay:0.05
+        });
+      });
+      gsap.utils.toArray('[data-hero-fade]').forEach((el,i)=>{
+        gsap.fromTo(el, {opacity:0, y:22}, {opacity:1, y:0, duration:0.9, delay:0.3+i*0.12, ease:'power3.out'});
+      });
+      gsap.utils.toArray('[data-hero-art]').forEach((el)=>{
+        gsap.fromTo(el, {opacity:0, scale:0.92}, {opacity:1, scale:1, duration:1.1, delay:0.25, ease:'power3.out'});
+      });
+    }
+
+    // scroll reveal
+    gsap.utils.toArray('.reveal').forEach((el)=>{
+      gsap.fromTo(el, {opacity:0, y:30}, {
+        opacity:1, y:0, duration:0.9, ease:'power3.out',
+        scrollTrigger:{trigger:el, start:'top 85%'}
+      });
+    });
+    gsap.utils.toArray('.reveal-stagger').forEach((group)=>{
+      const items = group.children;
+      gsap.fromTo(items, {opacity:0, y:26}, {
+        opacity:1, y:0, duration:0.7, ease:'power3.out', stagger:0.09,
+        scrollTrigger:{trigger:group, start:'top 85%'}
+      });
+    });
+
+    // number counters
+    gsap.utils.toArray('[data-count]').forEach(el=>{
+      const end = parseFloat(el.dataset.count);
+      const decimals = (el.dataset.count.split('.')[1]||'').length;
+      const suffix = el.dataset.suffix || '';
+      let obj = {val:0};
+      ScrollTrigger.create({
+        trigger:el, start:'top 90%', once:true,
+        onEnter:()=> gsap.to(obj, {val:end, duration:2, ease:'power2.out', onUpdate:()=>{
+          el.textContent = obj.val.toFixed(decimals) + suffix;
+        }})
+      });
+    });
+
+    // magnetic buttons
+    document.querySelectorAll('.magnetic').forEach(btn=>{
+      btn.addEventListener('mousemove', (e)=>{
+        const r = btn.getBoundingClientRect();
+        const x = e.clientX - r.left - r.width/2;
+        const y = e.clientY - r.top - r.height/2;
+        gsap.to(btn, {x:x*0.25, y:y*0.4, duration:0.4, ease:'power2.out'});
+      });
+      btn.addEventListener('mouseleave', ()=> gsap.to(btn, {x:0, y:0, duration:0.5, ease:'elastic.out(1,0.4)'}));
+    });
+
+    // parallax image blocks
+    gsap.utils.toArray('[data-parallax]').forEach(el=>{
+      gsap.to(el, {
+        yPercent:-12, ease:'none',
+        scrollTrigger:{trigger:el.parentElement, start:'top bottom', end:'bottom top', scrub:true}
+      });
+    });
+
+    // rotating seal
+    gsap.utils.toArray('.seal-mark').forEach(el=>{
+      gsap.to(el, {rotate:360, duration:70, repeat:-1, ease:'none'});
+    });
+
+    // horizontal marquee
+    document.querySelectorAll('.marquee-track').forEach(track=>{
+      const w = track.scrollWidth/2;
+      gsap.to(track, {x:-w, duration:22, ease:'none', repeat:-1});
+    });
+
+    // accordion (FAQ)
+    document.querySelectorAll('.acc-item').forEach(item=>{
+      const head = item.querySelector('.acc-head');
+      const body = item.querySelector('.acc-body');
+      head.addEventListener('click', ()=>{
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.acc-item.open').forEach(o=>{
+          if(o!==item){ o.classList.remove('open'); gsap.to(o.querySelector('.acc-body'), {height:0, duration:0.35, ease:'power2.inOut'}); }
+        });
+        if(isOpen){
+          item.classList.remove('open');
+          gsap.to(body, {height:0, duration:0.35, ease:'power2.inOut'});
+        } else {
+          item.classList.add('open');
+          gsap.set(body, {height:'auto'});
+          const h = body.offsetHeight;
+          gsap.fromTo(body, {height:0}, {height:h, duration:0.4, ease:'power2.inOut', onComplete:()=>gsap.set(body,{height:'auto'})});
+        }
+      });
+    });
+
+    // card tilt on hover
+    document.querySelectorAll('[data-tilt]').forEach(card=>{
+      card.addEventListener('mousemove', e=>{
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX-r.left)/r.width - 0.5;
+        const py = (e.clientY-r.top)/r.height - 0.5;
+        gsap.to(card, {rotateY: px*6, rotateX: -py*6, duration:0.4, ease:'power2.out', transformPerspective:600});
+      });
+      card.addEventListener('mouseleave', ()=> gsap.to(card, {rotateY:0, rotateX:0, duration:0.6, ease:'power3.out'}));
+    });
+
+</script>
+</body>
+</html>
