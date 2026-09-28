@@ -306,6 +306,48 @@
       .nl-ok{width:100%;}
     }
     @media (prefers-reduced-motion:reduce){.nl-card,.nl-modal,.newsletter-row.is-error{transition:none; animation:none;}}
+
+    /* ---- portal form: responsive polish + continue popup ---- */
+    .field-grid > *{min-width:0;}
+    .field input, .field textarea, .cselect-trigger{width:100%; min-width:0;}
+    .field textarea{resize:vertical;}
+    .field input[type="date"]{min-height:47px; -webkit-appearance:none; appearance:none;}
+    .field .err{margin-top:-2px;}
+    .form-card.shake{animation:nlShake .35s ease;}
+    .nl-summary{list-style:none; margin:0 0 22px; padding:0; text-align:left; border:1px solid var(--paper-line); border-radius:4px; background:var(--paper);}
+    .nl-summary li{display:flex; justify-content:space-between; gap:14px; padding:10px 14px; font-size:13.5px; border-bottom:1px solid var(--paper-line);}
+    .nl-summary li:last-child{border-bottom:0;}
+    .nl-summary li span:first-child{color:var(--ink-soft); flex-shrink:0;}
+    .nl-summary li span:last-child{font-weight:600; color:var(--navy); text-align:right; overflow-wrap:anywhere;}
+    .nl-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+    .nl-actions .nl-ok{flex:1 1 140px;}
+    .nl-ghost{background:transparent; color:var(--navy-deep); border:1px solid var(--paper-line); min-height:46px; padding:0 24px; font-weight:600; font-size:15px; cursor:pointer; border-radius:2px; flex:1 1 140px; transition:background .2s ease;}
+    .nl-ghost:hover{background:var(--paper-dim);}
+
+    @media (max-width:900px){
+      .tabs-row{overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+      .tabs-row::-webkit-scrollbar{display:none;}
+      .tab-btn{white-space:nowrap;}
+      .services-grid[style]{grid-template-columns:1fr 1fr !important;}
+    }
+    @media (max-width:640px){
+      .services-grid[style]{grid-template-columns:1fr !important; gap:18px !important;}
+      .track-box{padding:28px 20px;}
+      .track-input-row{flex-direction:column;}
+      .track-input-row .btn{width:100%;}
+      .review-row{flex-direction:column; gap:2px;}
+    }
+    @media (max-width:520px){
+      .tab-btn{margin-right:20px; font-size:14px;}
+      .form-card{padding:22px 18px;}
+      .form-card h3{font-size:20px;}
+      .form-card .sub{margin-bottom:24px;}
+      .field input, .field textarea, .cselect-trigger{font-size:16px;} /* stops iOS zoom-on-focus */
+      .wiz-actions{flex-direction:column-reverse; gap:12px;}
+      .wiz-actions .btn{width:100%; justify-content:center;}
+      .nl-actions{flex-direction:column-reverse;}
+      .nl-actions .nl-ok, .nl-ghost{width:100%; flex:none;}
+    }
   </style>
 </head>
 <body>
@@ -372,7 +414,7 @@
               </div>
               <div class="wiz-actions">
                 <button class="btn btn-outline">&larr; Back</button>
-                <button class="btn btn-primary magnetic">Continue to documents &rarr;</button>
+                <button type="button" class="btn btn-primary magnetic" id="continueBtn">Continue to documents &rarr;</button>
               </div>
             </div>
           </div>
@@ -830,6 +872,95 @@
   document.getElementById('nlOk').addEventListener('click',close);
   modal.addEventListener('click',function(e){if(e.target===modal) close();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modal.classList.contains('open')) close();});
+})();
+</script>
+<!-- Continue-to-documents popup -->
+<div class="nl-modal" id="docModal" role="dialog" aria-modal="true" aria-labelledby="docTitle" aria-hidden="true">
+  <div class="nl-card">
+    <button type="button" class="nl-close" id="docClose" aria-label="Close">&times;</button>
+    <div class="nl-icon"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h4 id="docTitle">Details saved successfully</h4>
+    <p>Thank you, <strong id="docName"></strong>. Your applicant details are saved. Next, you'll upload your scanned documents.</p>
+    <ul class="nl-summary">
+      <li><span>Service</span><span>Income Certificate</span></li>
+      <li><span>Aadhaar</span><span id="docAadhaar"></span></li>
+      <li><span>Mobile</span><span id="docMobile"></span></li>
+      <li><span>District</span><span id="docDistrict"></span></li>
+    </ul>
+    <div class="nl-actions">
+      <button type="button" class="nl-ghost" id="docEdit">Edit details</button>
+      <button type="button" class="nl-ok" id="docOk">Upload documents</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('continueBtn'), modal=document.getElementById('docModal');
+  if(!btn||!modal) return;
+  var card=document.querySelector('.form-card'), lastFocus=null;
+  var rules={
+    fname:{test:function(v){return v.length>=3;}, msg:'Please enter your full name.'},
+    dob:{test:function(v){return v && new Date(v)<new Date();}, msg:'Please enter a valid date of birth.'},
+    aadhaar:{test:function(v){return /^\d{12}$/.test(v.replace(/\s/g,''));}, msg:'Aadhaar must be 12 digits.'},
+    mobile:{test:function(v){return /^[6-9]\d{9}$/.test(v.replace(/[\s-]/g,''));}, msg:'Enter a valid 10-digit mobile number.'},
+    addr:{test:function(v){return v.length>=8;}, msg:'Please enter your residential address.'}
+  };
+  Object.keys(rules).forEach(function(id){
+    var el=document.getElementById(id), f=el.closest('.field');
+    var err=document.createElement('span'); err.className='err'; err.setAttribute('role','alert'); f.appendChild(err);
+    el.addEventListener('input',function(){ f.classList.remove('invalid'); });
+  });
+  // auto-space Aadhaar as XXXX XXXX XXXX
+  var aad=document.getElementById('aadhaar');
+  aad.addEventListener('input',function(){
+    var d=aad.value.replace(/\D/g,'').slice(0,12);
+    aad.value=d.replace(/(\d{4})(?=\d)/g,'$1 ');
+  });
+  var mob=document.getElementById('mobile');
+  mob.addEventListener('input',function(){ mob.value=mob.value.replace(/[^\d\s-]/g,'').slice(0,12); });
+
+  function validate(){
+    var first=null;
+    Object.keys(rules).forEach(function(id){
+      var el=document.getElementById(id), f=el.closest('.field'), ok=rules[id].test(el.value.trim());
+      f.classList.toggle('invalid',!ok);
+      f.querySelector('.err').textContent=ok?'':rules[id].msg;
+      if(!ok && !first) first=el;
+    });
+    return first;
+  }
+  function open(){
+    lastFocus=document.activeElement;
+    document.getElementById('docName').textContent=document.getElementById('fname').value.trim();
+    var a=document.getElementById('aadhaar').value.replace(/\s/g,'');
+    document.getElementById('docAadhaar').textContent='XXXX XXXX '+a.slice(-4);
+    document.getElementById('docMobile').textContent=document.getElementById('mobile').value.trim();
+    document.getElementById('docDistrict').textContent=document.getElementById('district').value;
+    modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    document.getElementById('docOk').focus();
+  }
+  function close(){
+    modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    if(lastFocus) lastFocus.focus();
+  }
+  btn.addEventListener('click',function(e){
+    e.preventDefault();
+    var bad=validate();
+    if(bad){
+      card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+      bad.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(function(){bad.focus({preventScroll:true});},350);
+      return;
+    }
+    open();
+  });
+  document.getElementById('docClose').addEventListener('click',close);
+  document.getElementById('docEdit').addEventListener('click',close);
+  document.getElementById('docOk').addEventListener('click',close);
+  modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&modal.classList.contains('open')) close(); });
 })();
 </script>
 </body>
