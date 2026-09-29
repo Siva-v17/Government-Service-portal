@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>User Dashboard · Stackly Government Services Portal</title>
+<title>Citizen Dashboard · Stackly Government Services Portal</title>
 <meta name="description" content="Track your government service applications, documents and payments in one place.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -510,6 +510,31 @@
     }
     .field input{font-size:16px;}   /* same zoom fix for text inputs */
 
+    /* ==========================================================
+       CUSTOM DROPDOWN (Preferred language)
+       Replaces the native <select> popup, which the OS draws outside
+       the page. This list is absolutely positioned inside the field,
+       at the field's own width, so it always stays within the display.
+       ========================================================== */
+    .field.dd-open{position:relative; z-index:50;}
+    .dd{position:relative; width:100%;}
+    .dd-btn{
+      width:100%; min-height:48px; text-align:left; cursor:pointer;
+      font-family:var(--ff-sans); font-size:16px; color:var(--ink);
+      padding:13px 40px 13px 14px; border:1px solid var(--paper-line); border-radius:var(--radius-s);
+      background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23112A4F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;
+      transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    .dd-btn:focus-visible, .dd-btn[aria-expanded="true"]{border-color:var(--teal); box-shadow:0 0 0 3px rgba(31,111,120,0.14); outline:none;}
+    .dd-list{
+      position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:60;
+      margin:0; padding:6px; list-style:none; max-height:240px; overflow-y:auto;
+      background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius-m); box-shadow:var(--shadow-2);
+    }
+    .dd-list li{padding:11px 12px; border-radius:var(--radius-s); font-size:15px; color:var(--ink); cursor:pointer;}
+    .dd-list li:hover, .dd-list li:focus{background:var(--paper-dim); outline:none;}
+    .dd-list li[aria-selected="true"]{background:var(--navy); color:#fff;}
+
 </style>
 </head>
 <body>
@@ -686,9 +711,23 @@
               <div class="field"><label for="pfEmail">Email</label><input id="pfEmail" type="email" readonly><span class="hint">Your sign-in email can&rsquo;t be changed here.</span></div>
               <div class="field" id="fPhone"><label for="pfPhone">Mobile number</label><input id="pfPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="98765 43210"><span class="err">Enter a valid 10-digit mobile number</span></div>
               <div class="field"><label for="pfWard">Ward / area</label><input id="pfWard" type="text" autocomplete="address-level2" placeholder="e.g. Adyar, Chennai"></div>
-              <div class="field"><label for="pfLang">Preferred language</label>
-                <select id="pfLang"><option value="en">English</option><option value="ta">Tamil (&#2980;&#2990;&#3007;&#2996;&#3021;)</option><option value="hi">Hindi (&#2361;&#2367;&#2306;&#2342;&#2368;)</option></select>
+
+              <!-- custom dropdown: the hidden <select> keeps #pfLang working for fill / save / reset -->
+              <div class="field" id="fLang">
+                <label id="pfLangLabel">Preferred language</label>
+                <div class="dd" id="langDD">
+                  <select id="pfLang" hidden>
+                    <option value="en">English</option>
+                    <option value="ta">Tamil (&#2980;&#2990;&#3007;&#2996;&#3021;)</option>
+                    <option value="hi">Hindi (&#2361;&#2367;&#2306;&#2342;&#2368;)</option>
+                  </select>
+                  <button type="button" class="dd-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="pfLangLabel langLabel">
+                    <span id="langLabel">English</span>
+                  </button>
+                  <ul class="dd-list" id="langList" role="listbox" aria-labelledby="pfLangLabel" hidden></ul>
+                </div>
               </div>
+
               <div class="form-actions">
                 <button type="button" class="btn btn-primary" id="saveProfile">Save changes</button>
                 <button type="button" class="btn btn-outline" id="resetProfile">Reset</button>
@@ -984,6 +1023,41 @@ document.getElementById('signOutBtn').addEventListener('click', ()=>{
         }
       });
 
+      /* ===== Custom language dropdown ===== */
+      const langSel = $('#pfLang'), langBtn = $('#langBtn'), langList = $('#langList'), langField = $('#fLang');
+      function buildLang(){
+        langList.innerHTML = Array.from(langSel.options).map(o =>
+          `<li role="option" tabindex="-1" data-v="${o.value}" aria-selected="${o.value === langSel.value}">${o.textContent}</li>`).join('');
+        $('#langLabel').textContent = langSel.options[langSel.selectedIndex].textContent;
+      }
+      function setLangOpen(open, focusItem){
+        langList.hidden = !open;
+        langBtn.setAttribute('aria-expanded', open);
+        langField.classList.toggle('dd-open', open);
+        if(open){
+          const cur = langList.querySelector('[aria-selected="true"]') || langList.firstElementChild;
+          if(focusItem && cur) cur.focus();
+        }
+      }
+      function pickLang(li){
+        langSel.value = li.dataset.v;
+        buildLang(); setLangOpen(false); langBtn.focus();
+      }
+      langBtn.addEventListener('click', ()=> setLangOpen(langList.hidden));
+      langBtn.addEventListener('keydown', e=>{
+        if(['ArrowDown','ArrowUp'].includes(e.key)){ e.preventDefault(); setLangOpen(true, true); }
+      });
+      langList.addEventListener('click', e=>{ const li = e.target.closest('li'); if(li) pickLang(li); });
+      langList.addEventListener('keydown', e=>{
+        const li = e.target.closest('li'); if(!li) return;
+        if(e.key === 'ArrowDown'){ e.preventDefault(); (li.nextElementSibling || li).focus(); }
+        else if(e.key === 'ArrowUp'){ e.preventDefault(); (li.previousElementSibling || li).focus(); }
+        else if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pickLang(li); }
+        else if(e.key === 'Escape'){ setLangOpen(false); langBtn.focus(); }
+        else if(e.key === 'Tab'){ setLangOpen(false); }
+      });
+      document.addEventListener('click', e=>{ if(!langField.contains(e.target)) setLangOpen(false); });
+
       /* ===== Profile & settings ===== */
       const PKEY = 'stackly_citizen_prefs';
       const defaultPrefs = {sms:true, email:true, docs:true};
@@ -997,6 +1071,8 @@ document.getElementById('signOutBtn').addEventListener('click', ()=>{
         $('#pfPhone').value = user.phone;
         $('#pfWard').value = user.ward;
         $('#pfLang').value = user.lang;
+        buildLang();
+        setLangOpen(false);
         const prefs = loadPrefs();
         $$('[data-pref]').forEach(cb => cb.checked = !!prefs[cb.dataset.pref]);
         $('#fName').classList.remove('invalid'); $('#fPhone').classList.remove('invalid');
@@ -1041,6 +1117,7 @@ document.getElementById('signOutBtn').addEventListener('click', ()=>{
           else a.removeAttribute('aria-current');
         });
         $('.topbar h1').textContent = titles[id];
+        setLangOpen(false);
         if(first) return;
         window.scrollTo(0,0);
         const h = $('h2', current);
