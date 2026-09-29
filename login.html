@@ -470,23 +470,16 @@
       if(!emailOk || !passOk) return;
 
       const emailForStorage = (emailVal.includes('@') ? emailVal : emailVal + '@stackly.gov.in').toLowerCase();
-      const isAdminAccount = Object.prototype.hasOwnProperty.call(ADMIN_ACCOUNTS, emailForStorage);
 
-      if(isAdminAccount && ADMIN_ACCOUNTS[emailForStorage] !== passVal){
-        showToast('Incorrect password', 'Please check your admin credentials and try again.', 'info');
-        return;
-      }
-      if(selectedRole === 'staff' && !isAdminAccount){
-        showToast('Access denied', 'This account is not registered as department staff.', 'info');
-        return;
-      }
-      if(selectedRole === 'citizen' && isAdminAccount){
-        showToast('Staff account', 'Select "Department staff" to sign in with this account.', 'info');
+      // Known demo admin account still needs its password
+      if(Object.prototype.hasOwnProperty.call(ADMIN_ACCOUNTS, emailForStorage) && ADMIN_ACCOUNTS[emailForStorage] !== passVal){
+        showToast('Incorrect password', 'Please check your credentials and try again.', 'info');
         return;
       }
 
-      // role comes from the account, not from the toggle alone
-      const role = isAdminAccount ? 'staff' : 'citizen';
+      // Role comes from the toggle: "Department staff" -> admin dashboard, "Citizen" -> user dashboard
+      // (front-end demo only; in production the server must verify the role)
+      const role = selectedRole === 'staff' ? 'staff' : 'citizen';
       showToast('Login successful', 'Redirecting you to your dashboard\u2026', 'success');
       setTimeout(()=> signIn(emailForStorage, null, role), 1100);
     });
