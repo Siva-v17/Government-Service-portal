@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Citizen Dashboard · Stackly Government Services Portal</title>
+<title>User Dashboard · Stackly Government Services Portal</title>
 <meta name="description" content="Track your government service applications, documents and payments in one place.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -738,17 +738,32 @@
       that login.html writes with localStorage.setItem (never appended), and
       renders each field exactly once.
     */
-    (function(){
-      const raw = localStorage.getItem('stackly_user');
+    /* session helpers: login stores the user in localStorage ("keep me signed in") or sessionStorage */
+function getSession(){
+  const raw = localStorage.getItem('stackly_user') || sessionStorage.getItem('stackly_user');
+  try { return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+}
+function saveSession(u){
+  const store = sessionStorage.getItem('stackly_user') && !localStorage.getItem('stackly_user') ? sessionStorage : localStorage;
+  store.setItem('stackly_user', JSON.stringify(u));
+}
+function clearSession(){
+  localStorage.removeItem('stackly_user'); sessionStorage.removeItem('stackly_user');
+}
+
+(function(){
       const guard = document.getElementById('authGuard');
       const shell = document.getElementById('dashShell');
-      let user = null;
-      try { user = raw ? JSON.parse(raw) : null; } catch(e) { user = null; }
+  const user = getSession();
 
-      if(!user || !user.email){
-        window.location.href = 'login.html';
-        return;
-      }
+  if(!user || !user.email){
+    window.location.replace('login.html');
+    return;
+  }
+  if(user.role === 'staff'){
+    window.location.replace('admin-dashboard.html');
+    return;
+  }
 
       const email = String(user.email).trim();
       const name = (user.name && String(user.name).trim()) || email.split('@')[0];
@@ -793,7 +808,7 @@
 })();
 
 document.getElementById('signOutBtn').addEventListener('click', ()=>{
-      localStorage.removeItem('stackly_user');
+      clearSession();
       window.location.href = 'login.html';
     });
 
@@ -1001,9 +1016,9 @@ document.getElementById('signOutBtn').addEventListener('click', ()=>{
 
         /* update fields on the existing session object (single key, never appended) */
         try {
-          const u = JSON.parse(localStorage.getItem('stackly_user')) || {};
+          const u = getSession() || {};
           u.name = name; u.phone = $('#pfPhone').value.trim(); u.ward = $('#pfWard').value.trim(); u.lang = $('#pfLang').value;
-          localStorage.setItem('stackly_user', JSON.stringify(u));
+          saveSession(u);
         } catch(e){}
         user.name = name; user.phone = $('#pfPhone').value.trim(); user.ward = $('#pfWard').value.trim(); user.lang = $('#pfLang').value;
         $('#userNameDisplay').textContent = name;
