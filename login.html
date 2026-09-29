@@ -295,6 +295,7 @@
               <span class="err">Password must be at least 6 characters.</span>
             </div>
             <div class="between-row">
+              <!-- "checked" attribute removed so the box starts unchecked; id added so JS can read it -->
               <label class="checkline"><input type="checkbox" id="keepSignedIn" style="margin-top:2px;"> Keep me signed in</label>
               <span class="link-sm" id="forgotPasswordLink">Forgot password?</span>
             </div>
@@ -369,18 +370,6 @@
   </div>
 
   <script>
-    /* ---- already signed in? go straight to the matching dashboard ---- */
-    (function(){
-      try {
-        const raw = localStorage.getItem('stackly_user') || sessionStorage.getItem('stackly_user');
-        if (!raw) return;
-        const u = JSON.parse(raw);
-        if (u && u.role) {
-          location.replace(u.role === 'staff' ? 'admin-dashboard.html' : 'user-dashboard.html');
-        }
-      } catch(e) { /* corrupted value: ignore and show login */ }
-    })();
-
     // tabs
     function activateAuthTab(tabName){
       document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab === tabName));
@@ -416,7 +405,7 @@
       });
     });
 
-    /* ---- toast notifications (works even if GSAP fails to load) ---- */
+    /* ---- toast notifications ---- */
     function showToast(title, message, type){
       type = type || 'info';
       const stack = document.getElementById('toastStack');
@@ -425,16 +414,10 @@
       el.innerHTML = '<span class="toast-ic">' + (type === 'success' ? '\u2713' : 'i') + '</span>'
         + '<span class="toast-text"><strong>' + title + '</strong><span>' + message + '</span></span>';
       stack.appendChild(el);
-      if (window.gsap) {
-        gsap.fromTo(el, {opacity:0, x:30}, {opacity:1, x:0, duration:0.4, ease:'power3.out'});
-        setTimeout(()=>{
-          gsap.to(el, {opacity:0, x:30, duration:0.35, ease:'power2.in', onComplete:()=> el.remove()});
-        }, 3800);
-      } else {
-        el.style.opacity = 1;
-        el.style.transform = 'none';
-        setTimeout(()=> el.remove(), 3800);
-      }
+      gsap.fromTo(el, {opacity:0, x:30}, {opacity:1, x:0, duration:0.4, ease:'power3.out'});
+      setTimeout(()=>{
+        gsap.to(el, {opacity:0, x:30, duration:0.35, ease:'power2.in', onComplete:()=> el.remove()});
+      }, 3800);
     }
 
     /*
@@ -465,11 +448,13 @@
       sessionStorage.removeItem('stackly_user');
 
       (keep ? localStorage : sessionStorage).setItem('stackly_user', JSON.stringify(user));
-
-      // role-based redirect: staff -> admin dashboard, citizen -> user dashboard
-      const target = (role === 'staff') ? 'admin-dashboard.html' : 'user-dashboard.html';
-      window.location.href = target;
+      window.location.href = (role === 'staff') ? 'admin-dashboard.html' : 'user-dashboard.html';
     }
+
+    /* Demo admin accounts (front-end only). In production the server returns the role after verifying credentials. */
+    const ADMIN_ACCOUNTS = {
+      'admin@stackly.gov.in': 'admin123'
+    };
 
     const loginForm = document.getElementById('loginForm');
     loginForm.addEventListener('submit', (e)=>{
@@ -483,12 +468,27 @@
       setField('loginEmail', emailOk);
       setField('loginPass', passOk);
       if(!emailOk || !passOk) return;
-      const emailForStorage = emailVal.includes('@') ? emailVal : emailVal + '@stackly.gov.in';
-      const role = selectedRole;
 
-      // schedule the redirect FIRST so a toast/animation problem can never block it
+      const emailForStorage = (emailVal.includes('@') ? emailVal : emailVal + '@stackly.gov.in').toLowerCase();
+      const isAdminAccount = Object.prototype.hasOwnProperty.call(ADMIN_ACCOUNTS, emailForStorage);
+
+      if(isAdminAccount && ADMIN_ACCOUNTS[emailForStorage] !== passVal){
+        showToast('Incorrect password', 'Please check your admin credentials and try again.', 'info');
+        return;
+      }
+      if(selectedRole === 'staff' && !isAdminAccount){
+        showToast('Access denied', 'This account is not registered as department staff.', 'info');
+        return;
+      }
+      if(selectedRole === 'citizen' && isAdminAccount){
+        showToast('Staff account', 'Select "Department staff" to sign in with this account.', 'info');
+        return;
+      }
+
+      // role comes from the account, not from the toggle alone
+      const role = isAdminAccount ? 'staff' : 'citizen';
+      showToast('Login successful', 'Redirecting you to your dashboard\u2026', 'success');
       setTimeout(()=> signIn(emailForStorage, null, role), 1100);
-      try { showToast('Login successful', 'Redirecting you to your dashboard\u2026', 'success'); } catch(err){ console.error(err); }
     });
 
     const otpBtn = document.getElementById('otpLoginBtn');
@@ -498,7 +498,7 @@
 
     const otpSignupBtn = document.getElementById('otpSignupBtn');
     otpSignupBtn.addEventListener('click', ()=>{
-      try { showToast('Account created', 'Verified with Aadhaar OTP \u2014 please log in to continue.', 'success'); } catch(err){ console.error(err); }
+      showToast('Account created', 'Verified with Aadhaar OTP \u2014 please log in to continue.', 'success');
       setTimeout(()=>{
         activateAuthTab('login');
         document.getElementById('loginEmail').value = 'citizen.otp@stackly.gov.in';
@@ -528,7 +528,7 @@
       setField('suName', nameOk); setField('suEmail', emailOk); setField('suMobile', mobileOk); setField('suPass', passOk); setField('suConfirmPass', confirmOk);
       if(!nameOk || !emailOk || !mobileOk || !passOk || !confirmOk) return;
       const signupEmail = email.value.trim();
-      try { showToast('Account created', 'Your account is ready \u2014 please log in to continue.', 'success'); } catch(err){ console.error(err); }
+      showToast('Account created', 'Your account is ready \u2014 please log in to continue.', 'success');
       setTimeout(()=>{
         activateAuthTab('login');
         document.getElementById('loginEmail').value = signupEmail;
@@ -541,19 +541,13 @@
 
 <script>
 
-    // preloader (falls back to plain hide if GSAP is unavailable)
+    // preloader
     window.addEventListener('load', () => {
       const pl = document.getElementById('preloader');
-      if(!window.gsap){
-        if(pl) pl.style.display = 'none';
-        return;
-      }
       if(pl){
         gsap.to(pl, {opacity:0, duration:0.6, delay:0.3, ease:'power2.out', onComplete:()=>{pl.style.display='none'; runHero();}});
       } else { runHero(); }
     });
-
-    if(window.gsap){
 
     // mobile menu
     const menuToggle = document.getElementById('menuToggle');
@@ -695,8 +689,6 @@
       });
       card.addEventListener('mouseleave', ()=> gsap.to(card, {rotateY:0, rotateX:0, duration:0.6, ease:'power3.out'}));
     });
-
-    } // end if(window.gsap)
 
 </script>
 </body>
