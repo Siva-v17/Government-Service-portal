@@ -211,6 +211,8 @@
 
     .chart-grid{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:24px; margin-bottom:24px;}
     .chart-grid.two-up{grid-template-columns:repeat(2,minmax(0,1fr));}
+    /* FIX: give the applications table more room than the grievances list */
+    .chart-grid.table-grid{grid-template-columns:minmax(0,2.4fr) minmax(0,1fr);}
     .panel{background:#fff; border:1px solid var(--paper-line); border-radius:8px; padding:28px;}
     .panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
     .panel-head h3{font-size:17px;}
@@ -236,10 +238,19 @@
     .griev-item .sev{width:7px; height:7px; border-radius:50%; margin-right:10px; display:inline-block;}
     .sev-high{background:var(--danger);} .sev-med{background:var(--gold);} .sev-low{background:var(--teal);}
 
+    /* FIX: tables never clip. They scroll inside their panel at every width. */
+    table.apps{display:block; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    table.apps th, table.apps td{white-space:nowrap;}
+    .row-actions{flex-wrap:nowrap;}
+    .row-actions button{white-space:nowrap;}
+
+    /* FIX: grievance list keeps the ID on one line, text wraps */
+    .griev-item{gap:14px;}
+    .griev-item > span:last-child{white-space:nowrap; flex-shrink:0;}
+
     @media (max-width:1100px){
       .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-      .chart-grid, .chart-grid.two-up{grid-template-columns:minmax(0,1fr);}
-      table.apps{display:block; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;}
+      .chart-grid, .chart-grid.two-up, .chart-grid.table-grid{grid-template-columns:minmax(0,1fr);}
     }
     @media (max-width:860px){
       .dash-shell{grid-template-columns:minmax(0,1fr);}
@@ -524,7 +535,7 @@
           </div>
         </div>
 
-        <div class="chart-grid">
+        <div class="chart-grid table-grid">
           <div class="panel">
             <div class="panel-head"><h3>Applications awaiting your review</h3><a href="#queue" class="link-sm">View all &rarr;</a></div>
             <table class="apps">
