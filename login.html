@@ -295,7 +295,8 @@
               <span class="err">Password must be at least 6 characters.</span>
             </div>
             <div class="between-row">
-              <label class="checkline"><input type="checkbox" checked style="margin-top:2px;"> Keep me signed in</label>
+              <!-- "checked" attribute removed so the box starts unchecked; id added so JS can read it -->
+              <label class="checkline"><input type="checkbox" id="keepSignedIn" style="margin-top:2px;"> Keep me signed in</label>
               <span class="link-sm" id="forgotPasswordLink">Forgot password?</span>
             </div>
             <button type="submit" class="btn btn-primary magnetic" style="width:100%;">Sign in</button>
@@ -307,12 +308,6 @@
             Sign in with Aadhaar OTP
           </button>
 
-          <!-- <button type="button" class="btn btn-outline" id="otpLoginBtn" style="width:100%;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back to site</a>
-
-          </button> -->
-
-          
           <a href="index.html" class="btn btn-outline" style="width:100%; margin-top:12px;">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
             Back to site
@@ -430,6 +425,14 @@
       We always OVERWRITE the "stackly_user" key with one fresh object (never
       append/push), so the dashboard can never read a stale or duplicated
       email. Signing out clears the key entirely.
+
+      "Keep me signed in" checked   -> localStorage   (survives browser restart)
+      "Keep me signed in" unchecked -> sessionStorage (cleared when the tab closes)
+
+      Dashboards must read from both:
+        const raw = localStorage.getItem('stackly_user') || sessionStorage.getItem('stackly_user');
+      and sign-out must clear both:
+        localStorage.removeItem('stackly_user'); sessionStorage.removeItem('stackly_user');
     */
     function signIn(email, name, role){
       const user = {
@@ -438,7 +441,13 @@
         role: role,
         signedInAt: new Date().toISOString()
       };
-      localStorage.setItem('stackly_user', JSON.stringify(user));
+      const keep = document.getElementById('keepSignedIn').checked;
+
+      // clear both first so there is never a stale copy in the other store
+      localStorage.removeItem('stackly_user');
+      sessionStorage.removeItem('stackly_user');
+
+      (keep ? localStorage : sessionStorage).setItem('stackly_user', JSON.stringify(user));
       window.location.href = (role === 'staff') ? 'admin-dashboard.html' : 'user-dashboard.html';
     }
 
@@ -460,9 +469,9 @@
     });
 
     const otpBtn = document.getElementById('otpLoginBtn');
-otpBtn.addEventListener('click', ()=>{
-  window.location.href = 'error.html';
-});
+    otpBtn.addEventListener('click', ()=>{
+      window.location.href = 'error.html';
+    });
 
     const otpSignupBtn = document.getElementById('otpSignupBtn');
     otpSignupBtn.addEventListener('click', ()=>{
@@ -528,6 +537,7 @@ otpBtn.addEventListener('click', ()=>{
     // header shadow on scroll
     const header = document.querySelector('header.site');
     window.addEventListener('scroll', ()=>{
+      if(!header) return;
       if(window.scrollY>16){ header.style.boxShadow='0 8px 28px -20px rgba(10,25,48,0.4)'; }
       else { header.style.boxShadow='none'; }
     });
