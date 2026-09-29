@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Service Portal · Stackly Government Services Portal</title>
+<title>Portal · Stackly Government Services Portal</title>
 <meta name="description" content="Apply for a government service in a guided flow, or track an existing application by its reference ID.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -311,7 +311,6 @@
     .field-grid > *{min-width:0;}
     .field input, .field textarea, .cselect-trigger{width:100%; min-width:0;}
     .field textarea{resize:vertical;}
-    .field input[type="date"]{min-height:47px; -webkit-appearance:none; appearance:none;}
     .field .err{margin-top:-2px;}
     .form-card.shake{animation:nlShake .35s ease;}
     .nl-summary{list-style:none; margin:0 0 22px; padding:0; text-align:left; border:1px solid var(--paper-line); border-radius:4px; background:var(--paper);}
@@ -323,6 +322,31 @@
     .nl-actions .nl-ok{flex:1 1 140px;}
     .nl-ghost{background:transparent; color:var(--navy-deep); border:1px solid var(--paper-line); min-height:46px; padding:0 24px; font-weight:600; font-size:15px; cursor:pointer; border-radius:2px; flex:1 1 140px; transition:background .2s ease;}
     .nl-ghost:hover{background:var(--paper-dim);}
+
+    /* ---- custom date picker (replaces native <input type="date"> popup) ---- */
+    .cdate{position:relative;}
+    .cd-label.placeholder{color:#8a8574;}
+    .cd-ico{width:18px; height:18px; fill:none; stroke:var(--ink-soft); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0;}
+    .cdate.open .cselect-trigger{border-color:var(--teal); box-shadow:0 0 0 3px rgba(31,111,120,0.14);}
+    .field.invalid .cselect-trigger{border-color:var(--danger);}
+    .cdate-pop{position:absolute; left:0; top:calc(100% + 6px); width:100%; max-width:340px; background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius-s); box-shadow:var(--shadow-2); padding:12px; z-index:40; opacity:0; visibility:hidden; transform:translateY(-6px); pointer-events:none; transition:opacity .16s ease, transform .16s ease;}
+    .cdate.open .cdate-pop{opacity:1; visibility:visible; transform:none; pointer-events:auto;}
+    .cdate-pop.flip{top:auto; bottom:calc(100% + 6px);}
+    .cd-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+    .cd-head button{background:none; border:0; cursor:pointer; font-family:var(--ff-sans); color:var(--navy); border-radius:3px;}
+    .cd-head [data-act="prev"], .cd-head [data-act="next"]{width:40px; height:40px; font-size:22px;}
+    .cd-head button:hover:not(:disabled){background:var(--paper-dim);}
+    .cd-head button:disabled{opacity:.3; cursor:not-allowed;}
+    .cd-title{font-weight:600; font-size:15px; padding:8px 12px;}
+    .cd-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px;}
+    .cd-grid.years{grid-template-columns:repeat(3,1fr); gap:6px;}
+    .cd-dow span{text-align:center; font-size:12px; color:var(--ink-soft); padding:6px 0; font-weight:600;}
+    .cd-day, .cd-year{aspect-ratio:1; border:0; background:none; border-radius:3px; font-family:var(--ff-sans); font-size:14px; color:var(--ink); cursor:pointer;}
+    .cd-year{aspect-ratio:auto; padding:12px 0;}
+    .cd-day:hover:not(:disabled), .cd-year:hover:not(:disabled){background:var(--paper-dim);}
+    .cd-day.today{outline:1px solid var(--gold);}
+    .cd-day.sel, .cd-year.sel{background:var(--navy); color:#fff; font-weight:600;}
+    .cd-day:disabled, .cd-year:disabled{color:#c3bda8; cursor:not-allowed;}
 
     @media (max-width:900px){
       .tabs-row{overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
@@ -401,7 +425,20 @@
               <p class="sub">Applying for: <strong style="color:var(--navy);">Income Certificate</strong> &middot; Revenue Department</p>
               <div class="field-grid">
                 <div class="field"><label for="fname">Full name</label><input id="fname" type="text" placeholder="As per Aadhaar" required></div>
-                <div class="field"><label for="dob">Date of birth</label><input id="dob" type="date" required></div>
+
+                <!-- Custom date picker: hidden #dob keeps the YYYY-MM-DD value so validation is unchanged -->
+                <div class="field">
+                  <label for="dob-trigger">Date of birth</label>
+                  <div class="cdate" id="dobPicker">
+                    <input id="dob" type="hidden">
+                    <button type="button" class="cselect-trigger" id="dob-trigger" aria-haspopup="dialog" aria-expanded="false">
+                      <span class="cd-label placeholder">DD / MM / YYYY</span>
+                      <svg class="cd-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </button>
+                    <div class="cdate-pop" role="dialog" aria-label="Choose date of birth"></div>
+                  </div>
+                </div>
+
                 <div class="field"><label for="aadhaar">Aadhaar number</label><input id="aadhaar" type="text" placeholder="XXXX XXXX XXXX" maxlength="14" required></div>
                 <div class="field"><label for="mobile">Mobile number</label><input id="mobile" type="tel" placeholder="10-digit mobile number" required></div>
                 <div class="field" style="grid-column:1/-1;"><label for="addr">Residential address</label><textarea id="addr" rows="3" placeholder="House no., street, village/town, district"></textarea></div>
@@ -585,6 +622,82 @@
         if(wrap.classList.contains('open')) position();
       });
     });
+  </script>
+
+  <!-- Custom date picker (Date of birth) -->
+  <script>
+  (function(){
+    var root=document.getElementById('dobPicker'); if(!root) return;
+    var hidden=root.querySelector('#dob'), trigger=root.querySelector('.cselect-trigger'),
+        label=root.querySelector('.cd-label'), pop=root.querySelector('.cdate-pop');
+    var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var today=new Date(); today.setHours(0,0,0,0);
+    var view=new Date(2000,0,1), mode='days', yearStart=0, selected='';
+    function pad(n){return String(n).padStart(2,'0');}
+    function iso(y,m,d){return y+'-'+pad(m+1)+'-'+pad(d);}
+    function head(title,prevOff,nextOff){
+      return '<div class="cd-head"><button type="button" data-act="prev" aria-label="Previous"'+(prevOff?' disabled':'')+'>&#8249;</button>'+
+        '<button type="button" class="cd-title" data-act="toggle">'+title+' &#9662;</button>'+
+        '<button type="button" data-act="next" aria-label="Next"'+(nextOff?' disabled':'')+'>&#8250;</button></div>';
+    }
+    function render(){
+      var y=view.getFullYear(), m=view.getMonth(), h='';
+      if(mode==='days'){
+        var nextOff=(y>today.getFullYear()||(y===today.getFullYear()&&m>=today.getMonth()));
+        h+=head(MONTHS[m]+' '+y,false,nextOff);
+        h+='<div class="cd-grid cd-dow">'+['Su','Mo','Tu','We','Th','Fr','Sa'].map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="cd-grid">';
+        var first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+        for(var i=0;i<first;i++) h+='<span></span>';
+        for(var d=1;d<=days;d++){
+          var dt=new Date(y,m,d), v=iso(y,m,d);
+          var cls='cd-day'+(v===selected?' sel':'')+(dt.getTime()===today.getTime()?' today':'');
+          h+='<button type="button" class="'+cls+'" data-iso="'+v+'"'+(dt>today?' disabled':'')+'>'+d+'</button>';
+        }
+        h+='</div>';
+      } else {
+        h+=head(yearStart+' \u2013 '+(yearStart+11),false,yearStart+12>today.getFullYear());
+        h+='<div class="cd-grid years">';
+        for(var k=0;k<12;k++){
+          var yr=yearStart+k;
+          h+='<button type="button" class="cd-year'+(yr===y?' sel':'')+'" data-year="'+yr+'"'+(yr>today.getFullYear()?' disabled':'')+'>'+yr+'</button>';
+        }
+        h+='</div>';
+      }
+      pop.innerHTML=h;
+    }
+    function position(){
+      pop.classList.remove('flip');
+      var r=trigger.getBoundingClientRect(), need=pop.offsetHeight+12;
+      if(window.innerHeight-r.bottom<need && r.top>window.innerHeight-r.bottom) pop.classList.add('flip');
+    }
+    function open(){
+      if(selected){var p=selected.split('-'); view=new Date(+p[0],+p[1]-1,1);}
+      mode='days'; render();
+      root.classList.add('open'); trigger.setAttribute('aria-expanded','true');
+      position();
+      pop.scrollIntoView({block:'nearest',behavior:'smooth'});
+    }
+    function close(){root.classList.remove('open'); trigger.setAttribute('aria-expanded','false');}
+    trigger.addEventListener('click',function(){root.classList.contains('open')?close():open();});
+    pop.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b||b.disabled) return;
+      var act=b.dataset.act;
+      if(act==='prev'){ mode==='days'?view.setMonth(view.getMonth()-1):yearStart-=12; render(); }
+      else if(act==='next'){ mode==='days'?view.setMonth(view.getMonth()+1):yearStart+=12; render(); }
+      else if(act==='toggle'){ mode=mode==='days'?'years':'days'; yearStart=view.getFullYear()-5; render(); }
+      else if(b.dataset.year){ view.setFullYear(+b.dataset.year); mode='days'; render(); }
+      else if(b.dataset.iso){
+        selected=b.dataset.iso; hidden.value=selected;
+        var p=selected.split('-'); label.textContent=p[2]+' / '+p[1]+' / '+p[0];
+        label.classList.remove('placeholder');
+        hidden.dispatchEvent(new Event('input',{bubbles:true})); // clears the invalid state
+        close(); trigger.focus();
+      }
+    });
+    document.addEventListener('click',function(e){ if(!root.contains(e.target)) close(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+    window.addEventListener('resize',function(){ if(root.classList.contains('open')) position(); });
+  })();
   </script>
 
 <footer class="site">
@@ -900,7 +1013,7 @@
   var card=document.querySelector('.form-card'), lastFocus=null;
   var rules={
     fname:{test:function(v){return v.length>=3;}, msg:'Please enter your full name.'},
-    dob:{test:function(v){return v && new Date(v)<new Date();}, msg:'Please enter a valid date of birth.'},
+    dob:{test:function(v){return v && new Date(v)<new Date();}, msg:'Please choose your date of birth.'},
     aadhaar:{test:function(v){return /^\d{12}$/.test(v.replace(/\s/g,''));}, msg:'Aadhaar must be 12 digits.'},
     mobile:{test:function(v){return /^[6-9]\d{9}$/.test(v.replace(/[\s-]/g,''));}, msg:'Enter a valid 10-digit mobile number.'},
     addr:{test:function(v){return v.length>=8;}, msg:'Please enter your residential address.'}
@@ -925,7 +1038,8 @@
       var el=document.getElementById(id), f=el.closest('.field'), ok=rules[id].test(el.value.trim());
       f.classList.toggle('invalid',!ok);
       f.querySelector('.err').textContent=ok?'':rules[id].msg;
-      if(!ok && !first) first=el;
+      // the DOB input is hidden, so focus/scroll its visible trigger button instead
+      if(!ok && !first) first = (id==='dob') ? document.getElementById('dob-trigger') : el;
     });
     return first;
   }
