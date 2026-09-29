@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Department Dashboard · Stackly Government Services Portal</title>
+<title>Admin Dashboard · Stackly Government Services Portal</title>
 <meta name="description" content="Review and process citizen applications, monitor department KPIs, and manage grievances.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -713,15 +713,30 @@ function downloadFile(name, text, type){
 const toCSV = rows => rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\r\n');
 
 /* ---------- auth + header (unchanged behaviour) ---------- */
+/* session helpers: login stores the user in localStorage ("keep me signed in") or sessionStorage */
+function getSession(){
+  const raw = localStorage.getItem('stackly_user') || sessionStorage.getItem('stackly_user');
+  try { return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+}
+function saveSession(u){
+  const store = sessionStorage.getItem('stackly_user') && !localStorage.getItem('stackly_user') ? sessionStorage : localStorage;
+  store.setItem('stackly_user', JSON.stringify(u));
+}
+function clearSession(){
+  localStorage.removeItem('stackly_user'); sessionStorage.removeItem('stackly_user');
+}
+
 (function(){
-  const raw = localStorage.getItem('stackly_user');
   const guard = document.getElementById('authGuard');
   const shell = document.getElementById('dashShell');
-  let user = null;
-  try { user = raw ? JSON.parse(raw) : null; } catch(e) { user = null; }
+  const user = getSession();
 
   if(!user || !user.email){
-    window.location.href = 'login.html';
+    window.location.replace('login.html');
+    return;
+  }
+  if(user.role !== 'staff'){
+    window.location.replace('user-dashboard.html');
     return;
   }
 
@@ -768,7 +783,7 @@ const toCSV = rows => rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""'
 })();
 
 document.getElementById('signOutBtn').addEventListener('click', ()=>{
-  localStorage.removeItem('stackly_user');
+  clearSession();
   window.location.href = 'login.html';
 });
 
@@ -1093,9 +1108,9 @@ function initDashboard(user){
     localStorage.setItem(SKEY, JSON.stringify(s));
     /* update the name on the existing session object (single key, never appended) */
     try {
-      const u = JSON.parse(localStorage.getItem('stackly_user')) || {};
+      const u = getSession() || {};
       u.name = name;
-      localStorage.setItem('stackly_user', JSON.stringify(u));
+      saveSession(u);
     } catch(e){}
     user.name = name;
     $('#userNameDisplay').textContent = name;
