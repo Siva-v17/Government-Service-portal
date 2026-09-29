@@ -485,6 +485,31 @@
       .kpi-card:hover .icon, .qa-card:hover .icon{transform:none;}
     }
 
+    /* ==========================================================
+       FORM FIELDS: NATIVE SELECT / INPUT FIX
+       Keep LAST. The profile panels must not lift, clip or scroll,
+       otherwise the browser's native <select> popup flickers or
+       opens in the wrong place on mobile.
+       ========================================================== */
+    #view-profile .panel{
+      overflow:visible;
+      transition:box-shadow .3s ease, border-color .3s ease;
+    }
+    #view-profile .panel:hover{
+      translate:none;
+    }
+
+    .field select{
+      appearance:none;
+      -webkit-appearance:none;
+      font-size:16px;              /* stops iOS zooming in on focus */
+      min-height:48px;
+      padding-right:40px;
+      cursor:pointer;
+      background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23112A4F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;
+    }
+    .field input{font-size:16px;}   /* same zoom fix for text inputs */
+
 </style>
 </head>
 <body>
